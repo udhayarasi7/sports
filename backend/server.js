@@ -13,28 +13,6 @@ app.use(cors());
 app.use(express.json({ limit: '10mb' }));
 app.use(express.urlencoded({ limit: '10mb', extended: true }));
 
-// Routes
-const authRoutes = require('./routes/auth');
-const tournamentRoutes = require('./routes/tournaments');
-const applicationRoutes = require('./routes/applications');
-
-app.use('/api/auth', authRoutes);
-app.use('/api/tournaments', tournamentRoutes);
-app.use('/api/applications', applicationRoutes);
-
-app.get('/api/health', (req, res) => {
-  res.json({ status: 'OK', message: 'Sports Hub API is running' });
-});
-
-// Serve static assets from frontend if built
-const path = require('path');
-app.use(express.static(path.join(__dirname, '../frontend/dist')));
-
-// Serve index.html for any non-API routes
-app.get('*', (req, res) => {
-  res.sendFile(path.join(__dirname, '../frontend/dist/index.html'));
-});
-
 // Connect to MongoDB with connection caching for serverless environments
 const MONGODB_URI = process.env.MONGODB_URI || 'mongodb://127.0.0.1:27017/sportshub';
 
@@ -71,6 +49,28 @@ app.use(async (req, res, next) => {
     console.error('Failed to establish database connection:', err);
     next(); // Continue to let route handlers handle the state gracefully
   }
+});
+
+// Routes
+const authRoutes = require('./routes/auth');
+const tournamentRoutes = require('./routes/tournaments');
+const applicationRoutes = require('./routes/applications');
+
+app.use('/api/auth', authRoutes);
+app.use('/api/tournaments', tournamentRoutes);
+app.use('/api/applications', applicationRoutes);
+
+app.get('/api/health', (req, res) => {
+  res.json({ status: 'OK', message: 'Sports Hub API is running' });
+});
+
+// Serve static assets from frontend if built
+const path = require('path');
+app.use(express.static(path.join(__dirname, '../frontend/dist')));
+
+// Serve index.html for any non-API routes
+app.get('*', (req, res) => {
+  res.sendFile(path.join(__dirname, '../frontend/dist/index.html'));
 });
 
 // Only listen locally; Vercel wraps the serverless environment and handles requests via exports
