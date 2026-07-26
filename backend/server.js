@@ -35,16 +35,39 @@ app.get('*', (req, res) => {
   res.sendFile(path.join(__dirname, '../frontend/dist/index.html'));
 });
 
-// Connect to MongoDB
+// Connect to MongoDB with connection caching for serverless environments
 const MONGODB_URI = process.env.MONGODB_URI || 'mongodb://127.0.0.1:27017/sportshub';
 
-mongoose.connect(MONGODB_URI)
-  .then(() => {
-    console.log('Connected to MongoDB successfully');
-  })
-  .catch((err) => {
-    console.error('MongoDB connection error:', err);
-  });
+let dbConnecting = null;
+async function connectToDatabase() {
+  if (mongoose.connection.readyState === 1) {
+    return mongoose.connection;
+  }
+  if (!dbConnecting) {
+    console.log('Initiating MongoDB connection...');
+    dbConnecting = mongoose.connect(MONGODB_URI).then((m) => {
+      console.log('Connected to MongoDB successfully');
+      dbConnecting = null;
+      return m;
+    }).catch((err) => {
+      console.error('MongoDB connection error:', err);
+      dbConnecting = null;
+      throw err;
+    });
+  }
+  return dbConnecting;
+}
+
+// Middleware to ensure DB connection is established for API requests before routing
+app.use(async (req, res, next) => {
+  try {
+    await connectToDatabase();
+    next();
+  } catch (err) {
+    console.error('Failed to establish database connection:', err);
+    next(); // Continue to let route handlers handle the state gracefully
+  }
+});
 
 // Only listen locally; Vercel wraps the serverless environment and handles requests via exports
 if (!process.env.VERCEL) {
