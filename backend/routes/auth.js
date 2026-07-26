@@ -14,7 +14,8 @@ router.post('/register', async (req, res) => {
     // Check if MongoDB is offline - return mock fallback so user is not blocked (Dev mode only)
     if (mongoose.connection.readyState !== 1) {
       if (process.env.NODE_ENV === 'production') {
-        return res.status(503).json({ success: false, message: 'Database offline. Please try again later.' });
+        const dbErr = req.app.locals.lastDbError || 'ReadyState not 1 (Connecting or Disconnected)';
+        return res.status(503).json({ success: false, message: `Database offline: ${dbErr}. Please try again later.` });
       }
       console.log('MongoDB is offline - returning mock registration details');
       const status = (role === 'coach' || role === 'organizer' || role === 'admin') ? 'pending' : 'approved';
@@ -104,7 +105,8 @@ router.post('/login', async (req, res) => {
     // Check if MongoDB is offline - return mock login so user is not blocked (Dev mode only)
     if (mongoose.connection.readyState !== 1) {
       if (process.env.NODE_ENV === 'production') {
-        return res.status(503).json({ success: false, message: 'Database offline. Please try again later.' });
+        const dbErr = req.app.locals.lastDbError || 'ReadyState not 1 (Connecting or Disconnected)';
+        return res.status(503).json({ success: false, message: `Database offline: ${dbErr}. Please try again later.` });
       }
       console.log('MongoDB is offline - returning mock login details');
       let role = 'player';

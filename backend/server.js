@@ -38,6 +38,8 @@ app.get('*', (req, res) => {
 // Connect to MongoDB with connection caching for serverless environments
 const MONGODB_URI = process.env.MONGODB_URI || 'mongodb://127.0.0.1:27017/sportshub';
 
+app.locals.lastDbError = null;
+
 let dbConnecting = null;
 async function connectToDatabase() {
   if (mongoose.connection.readyState === 1) {
@@ -47,10 +49,12 @@ async function connectToDatabase() {
     console.log('Initiating MongoDB connection...');
     dbConnecting = mongoose.connect(MONGODB_URI).then((m) => {
       console.log('Connected to MongoDB successfully');
+      app.locals.lastDbError = null;
       dbConnecting = null;
       return m;
     }).catch((err) => {
       console.error('MongoDB connection error:', err);
+      app.locals.lastDbError = err.message || String(err);
       dbConnecting = null;
       throw err;
     });
