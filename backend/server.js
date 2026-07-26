@@ -26,6 +26,15 @@ app.get('/api/health', (req, res) => {
   res.json({ status: 'OK', message: 'Sports Hub API is running' });
 });
 
+// Serve static assets from frontend if built
+const path = require('path');
+app.use(express.static(path.join(__dirname, '../frontend/dist')));
+
+// Serve index.html for any non-API routes
+app.get('*', (req, res) => {
+  res.sendFile(path.join(__dirname, '../frontend/dist/index.html'));
+});
+
 // Connect to MongoDB
 const MONGODB_URI = process.env.MONGODB_URI || 'mongodb://127.0.0.1:27017/sportshub';
 
