@@ -40,16 +40,17 @@ const MONGODB_URI = process.env.MONGODB_URI || 'mongodb://127.0.0.1:27017/sports
 
 mongoose.connect(MONGODB_URI)
   .then(() => {
-    console.log('Connected to MongoDB successfully at', MONGODB_URI);
-    app.listen(PORT, () => {
-      console.log(`Server running on port ${PORT}`);
-    });
+    console.log('Connected to MongoDB successfully');
   })
   .catch((err) => {
     console.error('MongoDB connection error:', err);
-    // Dynamic fallback so server doesn't crash during build checks if Mongo isn't running
-    console.log('Running server with memory-fallback dummy data triggers...');
-    app.listen(PORT, () => {
-      console.log(`Server running in offline-fallback mode on port ${PORT}`);
-    });
   });
+
+// Only listen locally; Vercel wraps the serverless environment and handles requests via exports
+if (!process.env.VERCEL) {
+  app.listen(PORT, () => {
+    console.log(`Server running on port ${PORT}`);
+  });
+}
+
+module.exports = app;
